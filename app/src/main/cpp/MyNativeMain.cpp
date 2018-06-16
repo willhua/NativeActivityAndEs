@@ -8,9 +8,8 @@
 
 #include "MyNativeMain.h"
 
-#define LOG_TAG "NATIVE_MAIN_CPP"
 
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR ,LOG_TAG ,__VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR ,"lyh" ,__VA_ARGS__)
 
 /*
  * android-manifest中：
@@ -26,7 +25,7 @@ static bool isLoop = false;
 static pthread_t loopID;
 
 void *looper(void *args) {
- /*   ANativeActivity *activity = (ANativeActivity *) args;
+    ANativeActivity *activity = (ANativeActivity *) args;
     AInputQueue *queue = (AInputQueue *) activity->instance;
     AInputEvent *event = NULL;
     while (isLoop) {
@@ -66,7 +65,7 @@ void *looper(void *args) {
             }
         }
         AInputQueue_finishEvent(queue, event, 1);//将事件从事件队列中移除
-    }   */
+    }
     return args;
 }
 
