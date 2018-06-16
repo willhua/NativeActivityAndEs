@@ -20,22 +20,22 @@ GLuint esprogram1;
 const char vShaderSrc1[] = {
         "#version 300 es                        \n"
         "layout(location = 0) in vec4 vpos;     \n"
-        "//layout(location = 1) in vec4 vcolor;   \n"
-        "//out vec4 color1;                       \n"
+        "layout(location = 1) in vec4 vcolor;   \n"
+        "out vec4 color1;                       \n"
         "void main()                            \n"
         "{                                      \n"
         "   gl_Position = vpos;                 \n"
-        "   //color = vcolor;                     \n"
+        "   color1 = vcolor;                    \n"
         "}                                      \n"
 };
 
 const char fShaderSrc1[] = {
         "#version 300 es                        \n"
-        "precision mediump float;                \n"
-        "//in  vec4 color1;                       \n"
+        "precision mediump float;               \n"
+        "in  vec4 color1;                       \n"
         "out vec4 fcolor1;                      \n"
         "void main() {                          \n"
-        "   fcolor1 = vec4(1.0, 0.0, 0.0, 1.0);                   \n"
+        "   fcolor1 = color1;                   \n"
         "}                                      \n"
 };
 
@@ -43,6 +43,12 @@ GLfloat vertices1[] = {
         0.0f,   0.5f,   0.0f,
         -0.5f,  -0.5f,   0.0f,
         0.5f,   -0.5f,   0.0f
+};
+
+GLfloat vcolors1[] = {
+        1.0,    0.0,    0.0,    1.0,
+        0.0,    1.0,    0.0,    1.0,
+        0.0,    0.0,    1.0,    1.0
 };
 
 
@@ -153,7 +159,9 @@ void drawOneFrame()
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(esprogram1);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, vcolors1);
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     eglSwapBuffers(eglDisplay, eglSurface); //如果没有这个，draw几次之后就会出现：read: unexpected EOF!错误
     ALOG("draw one end");
