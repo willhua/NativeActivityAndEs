@@ -5,11 +5,10 @@
 
 #include <android/log.h>
 #include <pthread.h>
-
 #include "MyNativeMain.h"
+#include "EsTest.h"
+#include "JniUtils.h"
 
-
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR ,"lyh" ,__VA_ARGS__)
 
 /*
  * android-manifest中：
@@ -38,7 +37,7 @@ void *looper(void *args) {
                     case AMOTION_EVENT_ACTION_DOWN:{//触摸按下事件
                         float x = AMotionEvent_getX(event, 0);//获得x坐标
                         float y = AMotionEvent_getY(event, 0);//获得y坐标
-                        LOGE("X:%f,Y:%f", x, y);//输出坐标
+                        ALOG("X:%f,Y:%f", x, y);//输出坐标
                         break;
                     }
                     case AMOTION_EVENT_ACTION_UP:{//触摸抬起事件
@@ -90,7 +89,7 @@ void bindLifeCycle(ANativeActivity *activity) {
 
 //事件队列创建完成, 开启事件线程
 void onInputQueueCreated(ANativeActivity *activity, AInputQueue *queue) {
-    LOGE("onInputQueueCreated");
+    ALOG("onInputQueueCreated");
     isLoop = true;
     activity->instance = (void *) queue;
     pthread_create(&loopID, NULL, looper, activity);
@@ -98,14 +97,14 @@ void onInputQueueCreated(ANativeActivity *activity, AInputQueue *queue) {
 
 //事件队列销毁前 退出线程循环
 void onInputQueueDestroyed(ANativeActivity *activity, AInputQueue *queue) {
-    LOGE("onInputQueueDestroyed");
+    ALOG("onInputQueueDestroyed");
     isLoop = false;
 }
 
 
 //相当于Java中的onCreate()方法,就是程序的入口点
 void ANativeActivity_onCreate(ANativeActivity *activity, void *savedState, size_t savedStateSize) {
-    LOGE("native on create");
+    ALOG("native on create");
     bindLifeCycle(activity);
 }
 
@@ -138,12 +137,31 @@ void onWindowFocusChanged(ANativeActivity *activity, int hasFocus) {
 
 }
 
-void onNativeWindowCreated(ANativeActivity *activity, ANativeWindow *window) {
+static bool isShow;
+static pthread_t triangleID;
 
+void * esView(void *args) {
+    createEglWindow((ANativeWindow*)args);
+    initEsProgram();
+    while (isShow)
+    {
+        drawOneFrame();
+    }
+    destroyEsProgram();
+    return args;
+}
+
+//在这里开始创建ES环境
+void onNativeWindowCreated(ANativeActivity *activity, ANativeWindow *window) {
+    isShow = true;
+    int ok = pthread_create(&triangleID, NULL, esView, window);
+    if (0 != ok){
+        ALOG("create es thread fail");
+    }
 }
 
 void onNativeWindowDestroyed(ANativeActivity *activity, ANativeWindow *window) {
-
+    isShow = false;
 }
 
 

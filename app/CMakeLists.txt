@@ -13,9 +13,11 @@ else ()
 endif (${ANDROID_PLATFORM_LEVEL} LESS 11)
 
 
+aux_source_directory(src/main/cpp CPP_SRC)
+
 add_library( main
              SHARED
-             src/main/cpp/MyNativeMain.cpp )
+             ${CPP_SRC} )
 
 
 find_library( log-lib
