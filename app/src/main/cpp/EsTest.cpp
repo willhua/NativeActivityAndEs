@@ -68,19 +68,22 @@ const char vShader2[] = {
 };
 
 const char fShader2[] = {
-        "#version 300 es                        \n"
-        "precision mediump float;               \n"
-        "in vec2 vcoord;                        \n"
-        "uniform sampler2D sample0;             \n"
-        "uniform sampler2D sample1;             \n"
-        "out vec4 fcolor;                       \n"
-        "void main(){                           \n"
-        "   vec4 color1;                        \n"
-        "   vec4 color2;                        \n"
-        "   color1 = texture(sample0, vcoord);  \n"
-        "   color2 = texture(sample1, vcoord);  \n"
-        "   fcolor =  color1 * (color2 + 0.25);          \n"
-        "}                                      \n"
+
+                "#version 300 es                                     \n"
+                "precision mediump float;                            \n"
+                "in vec2 vcoord;                                 \n"
+                "layout(location = 0) out vec4 outColor;             \n"
+                "uniform sampler2D sample0;                        \n"
+                "uniform sampler2D sample1;                       \n"
+                "void main()                                         \n"
+                "{                                                   \n"
+                "  vec4 baseColor;                                   \n"
+                "  vec4 lightColor;                                  \n"
+                "                                                    \n"
+                "  baseColor = texture( sample0, vcoord );     \n"
+                "  lightColor = texture( sample1, vcoord );   \n"
+                "  outColor = baseColor * (lightColor  + 0.5);       \n"
+                "}       "
 };
 
 GLfloat vertices2[] = {
@@ -167,44 +170,43 @@ void createEglWindow(ANativeWindow *window)
 GLuint textureTest()
 {
     GLuint program = loadProgram(vShader2, fShader2);
+    glUseProgram(program);
 
     int width1, height1, nrChannels1;
     unsigned char *data1 = stbi_load("/sdcard/es1.jpg", &width1, &height1, &nrChannels1, 0);
     ALOG("es1, %dx%d", width1, height1);
 
-    GLuint texture0;
-    glGenTextures(1, &texture0);
-    glBindTexture(GL_TEXTURE_2D, texture0);
+    GLuint texture[2];
+    glGenTextures(2, texture);
+    ALOG("TEXTURE: %d %d", texture[0], texture[1]);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture[0]);   //注意是GL_TEXTURE_2D或者其他类型，而不是GL_TEXTURE
+    //glTexImage2D specifies the two-dimensional texture for the current texture unit, specified with glActiveTexture.
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, data1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture0);     //注意是GL_TEXTURE_2D或者其他类型，而不是GL_TEXTURE
     GLint loc1 = glGetUniformLocation(program, "sample0");
     ALOG("loc1:%d", loc1);
     glUniform1i(loc1, 0);
+    free(data1);
 
 
     int width2, height2, nrChannels2;
-    unsigned char *data2 = stbi_load("/sdcard/es2.jpg", &width2, &height2, &nrChannels2, 0);
+    unsigned char *data2 = stbi_load("/sdcard/es2.png", &width2, &height2, &nrChannels2, 0);
     ALOG("es2, %dx%d", width2, height2);
 
-    GLuint  texture1;
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture[1]);
     //绑定图像数据
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, data2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width2, height2, 0, GL_RGBA, GL_UNSIGNED_BYTE, data2);
     //设置对图像缩小或者放大的差值方式，比如产生mip图的时候
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
     GLint loc2 = glGetUniformLocation(program, "sample1");
     ALOG("loc2:%d", loc2);
-    glUniform1i(loc2, 1);
-
+    glUniform1i(loc2, 1);   //在使用这个之前，一定要保证program已经被glUseProgram
+    free(data2);
     return program;
 }
 

@@ -11,5 +11,8 @@ GLuint loadShader(GLuint type, const char *src);
 
 GLuint loadProgram(const char *vshaderSrc, const char *fshaderSrc);
 
+GLuint loadTexture (char *fileName );
+
+
 
 #endif //NATIVEACTIVITYANDES_SHADERUTILS_H
