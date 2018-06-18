@@ -69,27 +69,36 @@ const char vShader2[] = {
 
 const char fShader2[] = {
         "#version 300 es                        \n"
+        "precision mediump float;               \n"
         "in vec2 vcoord;                        \n"
         "uniform sampler2D sample0;             \n"
         "uniform sampler2D sample1;             \n"
         "out vec4 fcolor;                       \n"
         "void main(){                           \n"
-        "   fcolor = texture(sample0, vcoord) * texture(sample1, vcoord);  \n"
+        "   vec4 color1;                        \n"
+        "   vec4 color2;                        \n"
+        "   color1 = texture(sample0, vcoord);  \n"
+        "   color2 = texture(sample1, vcoord);  \n"
+        "   fcolor =  color1 * (color2 + 0.25);          \n"
         "}                                      \n"
 };
 
 GLfloat vertices2[] = {
         -1.0,   0.5,    0.0,
-        1.0,    0.5,    0.0,
-        -1.0,   -0.5,   0.0,
-    //    1.0,    -0.5,   0.0
+        -1.0,   -0.5,    0.0,
+        1.0,   -0.5,   0.0,
+        1.0,    0.5,   0.0
 };
 
 GLfloat texture2[] = {
         0.0,    0.0,
-        1.0,    0.0,
+        0.0,    1.0,
         1.0,    1.0,
-    //    0.0,    1.0
+        1.0,    0.0
+};
+
+GLushort indices2[] = {
+        0,1,2,0,2,3
 };
 
 
@@ -163,31 +172,38 @@ GLuint textureTest()
     unsigned char *data1 = stbi_load("/sdcard/es1.jpg", &width1, &height1, &nrChannels1, 0);
     ALOG("es1, %dx%d", width1, height1);
 
-    int width2, height2, nrChannels2;
-    unsigned char *data2 = stbi_load("/sdcard/es2.jpg", &width2, &height2, &nrChannels2, 0);
-    ALOG("es2, %dx%d", width2, height2);
-
     GLuint texture0;
     glGenTextures(1, &texture0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture0);     //注意是GL_TEXTURE_2D或者其他类型，而不是GL_TEXTURE
-    glUniform1i(glGetUniformLocation(program, "sample0"), texture0);
+    glBindTexture(GL_TEXTURE_2D, texture0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, data1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture0);     //注意是GL_TEXTURE_2D或者其他类型，而不是GL_TEXTURE
+    GLint loc1 = glGetUniformLocation(program, "sample0");
+    ALOG("loc1:%d", loc1);
+    glUniform1i(loc1, 0);
 
+
+    int width2, height2, nrChannels2;
+    unsigned char *data2 = stbi_load("/sdcard/es2.jpg", &width2, &height2, &nrChannels2, 0);
+    ALOG("es2, %dx%d", width2, height2);
 
     GLuint  texture1;
     glGenTextures(1, &texture1);
-    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
-    glUniform1i(glGetUniformLocation(program, "sample1"), texture1);
     //绑定图像数据
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, data2);
     //设置对图像缩小或者放大的差值方式，比如产生mip图的时候
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    GLint loc2 = glGetUniformLocation(program, "sample1");
+    ALOG("loc2:%d", loc2);
+    glUniform1i(loc2, 1);
 
     return program;
 }
@@ -229,12 +245,13 @@ void destroyEsProgram()
 
 void drawOneFrame()
 {
-    ALOG("draw one frame");
+    //ALOG("draw one frame");
 
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    //glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices2);
     eglSwapBuffers(eglDisplay, eglSurface); //如果没有这个，draw几次之后就会出现：read: unexpected EOF!错误
-    ALOG("draw one end");
+    //ALOG("draw one end");
 
 }
 
