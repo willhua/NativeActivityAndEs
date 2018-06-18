@@ -17,6 +17,8 @@ aux_source_directory(src/main/cpp CPP_SRC)
 
 add_library( main
              SHARED
+
+             src/main/cpp/stb/stb_image.cpp
              ${CPP_SRC} )
 
 

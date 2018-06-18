@@ -12,6 +12,10 @@ int es_height;
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
 
+
+/*****************三角形************************/
+
+
 GLuint vshader1;
 GLuint fshader1;
 GLuint esprogram1;
@@ -51,7 +55,45 @@ GLfloat vcolors1[] = {
         0.0,    0.0,    1.0,    1.0
 };
 
+/***************纹理********************************/
+const char vShader2[] = {
+        "#version 300 es                        \n"
+        "out vec2 vcoord;                       \n"
+        "layout(location = 0) in vec4 vpos;     \n"
+        "layout(location = 1) in vec2 text_pos; \n"
+        "void main(){                           \n"
+        "   gl_Position = vpos;                 \n"
+        "   vcoord = text_pos;                  \n"
+        "}                                      \n"
+};
 
+const char fShader2[] = {
+        "#version 300 es                        \n"
+        "in vec2 vcoord;                        \n"
+        "uniform sampler2D sample0;             \n"
+        "uniform sampler2D sample1;             \n"
+        "out vec4 fcolor;                       \n"
+        "void main(){                           \n"
+        "   fcolor = texture(sample0, vcoord) * texture(sample1, vcoord);  \n"
+        "}                                      \n"
+};
+
+GLfloat vertices2[] = {
+        -1.0,   0.5,    0.0,
+        1.0,    0.5,    0.0,
+        -1.0,   -0.5,   0.0,
+    //    1.0,    -0.5,   0.0
+};
+
+GLfloat texture2[] = {
+        0.0,    0.0,
+        1.0,    0.0,
+        1.0,    1.0,
+    //    0.0,    1.0
+};
+
+
+/**************************************************/
 
 void createEglWindow(ANativeWindow *window)
 {
@@ -112,34 +154,69 @@ void createEglWindow(ANativeWindow *window)
     }
 }
 
+
+GLuint textureTest()
+{
+    GLuint program = loadProgram(vShader2, fShader2);
+
+    int width1, height1, nrChannels1;
+    unsigned char *data1 = stbi_load("/sdcard/es1.jpg", &width1, &height1, &nrChannels1, 0);
+    ALOG("es1, %dx%d", width1, height1);
+
+    int width2, height2, nrChannels2;
+    unsigned char *data2 = stbi_load("/sdcard/es2.jpg", &width2, &height2, &nrChannels2, 0);
+    ALOG("es2, %dx%d", width2, height2);
+
+    GLuint texture0;
+    glGenTextures(1, &texture0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture0);     //注意是GL_TEXTURE_2D或者其他类型，而不是GL_TEXTURE
+    glUniform1i(glGetUniformLocation(program, "sample0"), texture0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, data1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+
+    GLuint  texture1;
+    glGenTextures(1, &texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    glUniform1i(glGetUniformLocation(program, "sample1"), texture1);
+    //绑定图像数据
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGB, GL_UNSIGNED_BYTE, data2);
+    //设置对图像缩小或者放大的差值方式，比如产生mip图的时候
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    return program;
+}
+
 void initEsProgram()
 {
-    ALOG("initEsProgram");
-    vshader1 = loadShader(GL_VERTEX_SHADER, vShaderSrc1);
-    fshader1 = loadShader(GL_FRAGMENT_SHADER, fShaderSrc1);
+    if (true) {
+        esprogram1 = textureTest();
 
-    esprogram1 = glCreateProgram();
-    if(esprogram1 == 0){
-        ALOG("glCreateProgram error");
-    }
-    glAttachShader(esprogram1, vshader1);
-    glAttachShader(esprogram1, fshader1);
+        glViewport(0, 0, es_width, es_height);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(esprogram1);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices2);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, texture2);
+        glEnableVertexAttribArray(1);
+    } else {
 
-    glLinkProgram(esprogram1);
+        esprogram1 = loadProgram(vShaderSrc1, fShaderSrc1);
 
-    GLint linkedok;
-    glGetProgramiv(esprogram1, GL_LINK_STATUS, &linkedok);
-    if (linkedok == GL_FALSE){
-        GLint  infolen = 0;
-        glGetProgramiv(esprogram1, GL_INFO_LOG_LENGTH, &infolen);
-        ALOG("link erroe:%d  %d",linkedok, infolen);
-        if(infolen > 1){
-            char *infoLog = (char*)malloc(sizeof(char) * infolen);
-            glGetProgramInfoLog(esprogram1, infolen, NULL, infoLog);
-            ALOG("link info:%s", infoLog);
-            free(infoLog);
-        }
-        glDeleteProgram(esprogram1);
+        glViewport(0, 0, es_width, es_height);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(esprogram1);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices1);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, vcolors1);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
     }
 
 }
@@ -154,14 +231,7 @@ void drawOneFrame()
 {
     ALOG("draw one frame");
 
-    glViewport(0, 0, es_width, es_height);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(esprogram1);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, vcolors1);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
+
     glDrawArrays(GL_TRIANGLES, 0, 3);
     eglSwapBuffers(eglDisplay, eglSurface); //如果没有这个，draw几次之后就会出现：read: unexpected EOF!错误
     ALOG("draw one end");

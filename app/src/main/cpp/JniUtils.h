@@ -8,6 +8,8 @@
 #include <android/log.h>
 #include <jni.h>
 #include <thread>
+#include "stb/stb_image.h"
+
 
 #define ALOG(...) __android_log_print(ANDROID_LOG_DEBUG, "willhua", __VA_ARGS__)
 

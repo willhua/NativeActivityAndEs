@@ -9,4 +9,7 @@
 
 GLuint loadShader(GLuint type, const char *src);
 
+GLuint loadProgram(const char *vshaderSrc, const char *fshaderSrc);
+
+
 #endif //NATIVEACTIVITYANDES_SHADERUTILS_H
