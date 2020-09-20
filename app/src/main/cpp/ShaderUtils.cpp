@@ -7,9 +7,9 @@
 #include "ShaderUtils.h"
 #include "JniUtils.h"
 
-GLuint loadShader(GLuint type, const char *src)
+GLuint loadShader(GLuint shaderType, const char *pSource)
 {
-    GLuint shader = glCreateShader(type);   //这里要注意，要把create函数的返回值赋给shader。
+ /*   GLuint shader = glCreateShader(type);   //这里要注意，要把create函数的返回值赋给shader。
     if (shader == 0){
         ALOG("create shader error");
     }
@@ -20,6 +20,30 @@ GLuint loadShader(GLuint type, const char *src)
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compliedok);
     if (compliedok == GL_FALSE){
         ALOG("erroe load shader");
+    }
+    return shader; */
+
+
+    GLuint shader = glCreateShader(shaderType);
+    if (shader) {
+        glShaderSource(shader, 1, &pSource, NULL);
+        glCompileShader(shader);
+        GLint compiled = 0;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+        if (!compiled) {
+            GLint infoLen = 0;
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+            if (infoLen) {
+                char* buf = (char*) malloc(infoLen);
+                if (buf) {
+                    glGetShaderInfoLog(shader, infoLen, NULL, buf);
+                    ALOG("Could not compile shader: %s ", buf);
+                    free(buf);
+                }
+                glDeleteShader(shader);
+                shader = 0;
+            }
+        }
     }
     return shader;
 }

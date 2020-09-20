@@ -1,6 +1,13 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
+#target_compile_features(main PRIVATE cxx_range_for)
+#set(CMAKE_CXX11_EXTENSION_COMPILE_OPTION "-std=c++17")
+#set(CMAKE_CXX_FLAGS "-std=c++11")
+#set(ANDROID_STL "c++_static")
+#set(OpenCV_DIR E:\\opencv_345_android_sdk\\OpenCV-android-sdk\\sdk\\native\\jni)
+#find_package(OpenCV REQUIRED)
+
 #如果当前系统版本过低设置拒绝编译
 if (${ANDROID_PLATFORM_LEVEL} LESS 11)
   message(FATAL_ERROR "OpenGL 2 is not supported before API level 11 (currently using ${ANDROID_PLATFORM_LEVEL}).")
@@ -40,4 +47,4 @@ target_link_libraries( # Specifies the target library.
                        EGL
                        log
                        m
-                       )
+                       ${OpenCV_LIBS})

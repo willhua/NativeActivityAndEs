@@ -7,10 +7,23 @@
 
 #include <android/log.h>
 #include <jni.h>
-#include <thread>
+//#include <thread>
 #include "stb/stb_image.h"
 
 
 #define ALOG(...) __android_log_print(ANDROID_LOG_DEBUG, "willhua", __VA_ARGS__)
+
+#define CHECK() \
+{\
+    GLenum err = glGetError(); \
+    if (err != GL_NO_ERROR) \
+    {\
+       ALOG("glGetError returns %d\n", err); \
+    }\
+    else \
+    {\
+        ALOG("CHECK OK"); \
+    }\
+}
 
 #endif //NATIVEACTIVITYANDES_JNIUTILS_H

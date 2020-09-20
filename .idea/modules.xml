@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/NativeActivityAndEs.iml" filepath="$PROJECT_DIR$/NativeActivityAndEs.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/NativeActivityAndEs.iml" filepath="$PROJECT_DIR$/NativeActivityAndEs.iml" group="NativeActivityAndEs" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="NativeActivityAndEs/app" />
     </modules>
   </component>
 </project>
