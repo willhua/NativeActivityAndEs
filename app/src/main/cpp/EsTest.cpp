@@ -8,11 +8,31 @@
 //#include <opencv2/opencv.hpp>
 #include <vector>
 #include <stdint.h>
+
+
+
+
+
 int es_width;
 int es_height;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
+
+
+
+std::vector<uint8_t> getRandomRGBA(const int width, const int height){
+    std::vector<uint8_t > res(width * height * 4);
+    for(int i = 0; i < width * height; ++i){
+        res[i * 4] = i & 0xFF;
+        res[i * 4] = (i >> 8)& 0xFF;
+        res[i * 4 + 2] = (i >> 16)& 0xFF;
+        res[i * 4 + 3] = i & 0xFF;
+    }
+    return res;
+}
+
+
 
 
 /*****************三角形************************/
@@ -369,7 +389,7 @@ void createEglWindow(ANativeWindow *window)
 
     es_width = ANativeWindow_getWidth(window);
     es_height = ANativeWindow_getHeight(window);
-
+    ALOG("native width width=%d height=%d", es_width, es_height);
 
     EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (display == EGL_NO_DISPLAY) {
@@ -420,43 +440,58 @@ void createEglWindow(ANativeWindow *window)
 GLuint textureTest()
 {
     GLuint program = loadProgram(vShader2, fShader2);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
     glUseProgram(program);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
+    std::vector<uint8_t > ranrgba = getRandomRGBA(es_width, es_height);
 
     int width1, height1, nrChannels1;
-    unsigned char *data1 = stbi_load("/sdcard/es1.jpg", &width1, &height1, &nrChannels1, 0);
+    unsigned char *data1 = stbi_load("/sdcard/1.jpg", &width1, &height1, &nrChannels1, 0);
+//    width1 = es_width;
+//    height1 = es_height;
+//    data1 = ranrgba.data();
     ALOG("es1, %dx%d", width1, height1);
 
     GLuint texture[2];
     glGenTextures(2, texture);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
     ALOG("TEXTURE: %d %d", texture[0], texture[1]);
 
     glActiveTexture(GL_TEXTURE0);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
     glBindTexture(GL_TEXTURE_2D, texture[0]);   //注意是GL_TEXTURE_2D或者其他类型，而不是GL_TEXTURE
     //glTexImage2D specifies the two-dimensional texture for the current texture unit, specified with glActiveTexture.
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, data1);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     GLint loc1 = glGetUniformLocation(program, "sample0");
     ALOG("loc1:%d", loc1);
     glUniform1i(loc1, 0);
-    free(data1);
 
 
-    int width2, height2, nrChannels2;
-    unsigned char *data2 = stbi_load("/sdcard/es2.png", &width2, &height2, &nrChannels2, 0);
+    int width2 = 0, height2 = 0, nrChannels2 = 0;
+    unsigned char *data2 = stbi_load("/sdcard/2.jpg", &width2, &height2, &nrChannels2, 0);
     ALOG("es2, %dx%d", width2, height2);
+//    width2 = es_width;
+//    height2 = es_height;
+//    data2 = ranrgba.data();
 
     glActiveTexture(GL_TEXTURE1);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
     glBindTexture(GL_TEXTURE_2D, texture[1]);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
     //绑定图像数据
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width2, height2, 0, GL_RGBA, GL_UNSIGNED_BYTE, data2);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
+
     //设置对图像缩小或者放大的差值方式，比如产生mip图的时候
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     GLint loc2 = glGetUniformLocation(program, "sample1");
     ALOG("loc2:%d", loc2);
     glUniform1i(loc2, 1);   //在使用这个之前，一定要保证program已经被glUseProgram
-    free(data2);
+    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
     return program;
 }
 
@@ -513,7 +548,7 @@ void cstest()
 
 void initEsProgram()
 {
-    if(true) //cs test
+    if(false) //cs test
     {
         yuvToRgb();
         CHECK();
@@ -522,15 +557,21 @@ void initEsProgram()
 
     if (true) {
         esprogram1 = textureTest();
+        ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
 
         glViewport(0, 0, es_width, es_height);
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(esprogram1);
+        ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
+
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices2);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, texture2);
         glEnableVertexAttribArray(1);
+
+        ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
+
     } else {
 
         esprogram1 = loadProgram(vShaderSrc1, fShaderSrc1);
@@ -555,13 +596,15 @@ void destroyEsProgram()
 
 void drawOneFrame()
 {
-    ALOG("draw one frame");
+//    ALOG("draw one frame");
 
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
+//    ALOG("%s %d, err=%d", __func__, __LINE__, glGetError());
+
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices2);
     eglSwapBuffers(eglDisplay, eglSurface); //如果没有这个，draw几次之后就会出现：read: unexpected EOF!错误
-    ALOG("draw one end");
+//    ALOG("draw one end");
 
 }
 
