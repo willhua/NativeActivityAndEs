@@ -18,11 +18,11 @@
     GLenum err = glGetError(); \
     if (err != GL_NO_ERROR) \
     {\
-       ALOG("glGetError returns %d\n", err); \
+       ALOG("%s %d glGetError returns %d\n", __func__, __LINE__, err); \
     }\
     else \
     {\
-        ALOG("CHECK OK"); \
+        ; \
     }\
 }
 

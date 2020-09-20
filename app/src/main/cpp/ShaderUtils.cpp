@@ -25,11 +25,15 @@ GLuint loadShader(GLuint shaderType, const char *pSource)
 
 
     GLuint shader = glCreateShader(shaderType);
+    CHECK();
     if (shader) {
         glShaderSource(shader, 1, &pSource, NULL);
+        CHECK();
         glCompileShader(shader);
+        CHECK();
         GLint compiled = 0;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+        CHECK();
         if (!compiled) {
             GLint infoLen = 0;
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
@@ -53,14 +57,18 @@ GLuint loadProgram(const char *vshaderSrc, const char *fshaderSrc)
 {
     GLuint vshader = loadShader(GL_VERTEX_SHADER, vshaderSrc);
     GLuint fshader = loadShader(GL_FRAGMENT_SHADER, fshaderSrc);
-
+    CHECK();
     GLuint program = glCreateProgram();
+    CHECK();
     glAttachShader(program, vshader);
     glAttachShader(program, fshader);
+    CHECK();
 
     glLinkProgram(program);
+    CHECK();
     GLint linkedok;
     glGetProgramiv(program, GL_LINK_STATUS, &linkedok);
+    CHECK();
     if (linkedok == GL_FALSE){
         GLint  infolen = 0;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infolen);
@@ -75,8 +83,9 @@ GLuint loadProgram(const char *vshaderSrc, const char *fshaderSrc)
         program = GL_FALSE;
     }
 
-    glDeleteProgram(vshader);
-    glDeleteProgram(fshader);
+    glDeleteShader(vshader);
+    glDeleteShader(fshader);
+    CHECK();
 
     return program;
 }
